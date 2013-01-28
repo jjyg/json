@@ -39,7 +39,10 @@ module JSON
 			poff[0] += 1
 			out = {}
 			parse_skipspc(str, poff)
-			return out if str[poff[0]] == ?}
+			if str[poff[0]] == ?}
+				poff[0] += 1
+				return out
+			end
 
 			loop do
 				k = parse(str, poff)
@@ -67,7 +70,10 @@ module JSON
 			poff[0] += 1
 			out = []
 			parse_skipspc(str, poff)
-			return out if str[poff[0]] == ?]
+			if str[poff[0]] == ?]
+				poff[0] += 1
+				return out
+			end
 
 			loop do
 				out << parse(str, poff)
@@ -155,7 +161,8 @@ private
 		c = str[poff[0]]
 		if c == ?u
 			poff[0] += 5
-			str[poff[0]-4, 4].to_i(16)
+			c = str[poff[0]-4, 4].to_i(16)
+			c > 255 ? '?' : c
 		elsif c = CHR_ESC[c]
 			poff[0] += 1
 			c
