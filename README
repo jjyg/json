@@ -1,0 +1,5 @@
+This is a trivial JSON <-> ruby parsing lib
+
+This lib will NOT instantiate classes / symbols / exec random ruby code
+
+Floats and weird unicode characters are not handled (because f*x you utf8)
