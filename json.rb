@@ -150,7 +150,7 @@ module JSON
 	end
 
 private
-	SPC = { ?\  => true, ?\t => true, ?\n => true }
+	SPC = { ?\  => true, ?\t => true, ?\r => true, ?\n => true }
 	def self.parse_skipspc(str, poff)
 		# TODO comments ?
 		poff[0] += 1 while SPC[str[poff[0]]]
