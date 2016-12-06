@@ -13,7 +13,16 @@ module JSON
 		when ::Integer, ::Float
 			obj.to_s
 		when ::String
-			'"' + obj.unpack('C*').map { |c| (c == 0x22 or c == 0x5c or c < 0x20 or c > 0x7e) ? '\\u%04X' % c : c.chr }.join + '"'
+			s = '"'
+			s.force_encoding('binary') rescue nil
+			obj.each_byte { |c|
+				if (c == 0x22 or c == 0x5c or c < 0x20 or c > 255)
+					s << ('\\u%04X' % c)
+				else
+					s << c
+				end
+			}
+			s << '"'
 		when true
 			'true'
 		when false
@@ -103,7 +112,7 @@ module JSON
 					break
 				when ?\\
 					poff[0] += 1
-					out << parse_str_escape(str, poff)
+					parse_str_escape(out, str, poff)
 				else
 					poff[0] += 1
 					out << c
@@ -157,17 +166,29 @@ private
 	end
 
 	CHR_ESC = { ?b => ?\b, ?f => ?\f, ?n => ?\n, ?r => ?\r, ?t => ?\t, ?" => ?", ?\\ => ?\\, ?/ => ?/ }
-	def self.parse_str_escape(str, poff)
+	def self.parse_str_escape(out, str, poff)
 		c = str[poff[0]]
 		if c == ?u
 			poff[0] += 5
 			c = str[poff[0]-4, 4].to_i(16)
-			c > 255 ? '?' : c
+			out << utf8_encode(c)
 		elsif c = CHR_ESC[c]
 			poff[0] += 1
-			c
+			out << c
 		else
 			raise ParseError, "JSON: unexpected escape #{str[poff[0]-1, 4].inspect}"
+		end
+	end
+
+	def self.utf8_encode(c)
+		if c <= 0x7f
+			c
+		elsif c <= 0x7ff
+			[(0xc0 | ((c >> 6) & 0x1f)), (0x80 | (c & 0x3f))].pack('C*')
+		elsif c <= 0xffff
+			[(0xe0 | ((c >> 12) & 0x0f)), (0x80 | ((c >> 6) & 0x3f)), (0x80 | (c & 0x3f))].pack('C*')
+		else
+			'?'
 		end
 	end
 end

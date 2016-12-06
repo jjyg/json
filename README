@@ -2,4 +2,6 @@ This is a trivial JSON <-> ruby parsing lib
 
 This lib will NOT instantiate classes / symbols / exec random ruby code
 
-Floats and weird unicode characters are not handled (because f*x you utf8)
+Floats are not handled
+
+Input strings are encoded as is, and so may yield json that is not valid UTF-8 (eg binary input). Decoding with this lib will get the binary data back as it was. The decoded strings may have an invalid encoding (eg marked as UTF-8 but holding non-conforming bytes)
