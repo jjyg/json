@@ -124,6 +124,7 @@ module JSON
 			out = ''
 			out << str[poff[0]]
 			poff[0] += 1
+			exp = nil
 			float = false
 			loop do
 				case c = str[poff[0]]
@@ -131,7 +132,22 @@ module JSON
 				when ?.
 					break if float
 					float = true
-				# when ?e, ?E	# TODO
+				when ?e, ?E
+					float = true
+					exp = ''
+					poff[0] += 1
+					loop do
+						case c = str[poff[0]]
+						when ?0..?9
+						when ?-
+							break if exp.length > 0
+						else
+							break
+						end
+						exp << c
+						poff[0] += 1
+					end
+					break
 				else
 					break
 				end
@@ -139,7 +155,7 @@ module JSON
 				poff[0] += 1
 			end
 			raise ParseError, "JSON: unexpected sequence #{str[poff[0]-1, 4].inspect}" if out == '-'
-			float ? out.to_f : out.to_i
+			float ? exp ? out.to_f * 10**(exp.to_i) : out.to_f : out.to_i
 
 		when ?t
 			raise ParseError, "JSON: unexpected sequence #{str[poff[0], 4].inspect}" if str[poff[0], 4] != 'true'
