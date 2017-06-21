@@ -57,7 +57,7 @@ module JSON
 				k = parse(str, poff)
 
 				parse_skipspc(str, poff)
-				raise ParseError, "JSON: expected ':', got #{str[poff[0], 4].inspect}" if str[poff[0]] != ?:
+				raise ParseError, "JSON: expected ':', got #{str[poff[0], 4].inspect} near #{str[[poff[0] - 8, 0].max, 20].inspect}" if str[poff[0]] != ?:
 				poff[0] += 1
 
 				out[k] = parse(str, poff)
@@ -70,7 +70,7 @@ module JSON
 					poff[0] += 1
 					break
 				else
-					raise ParseError, "JSON: expected ',' or '}', got #{str[poff[0], 4].inspect}"
+					raise ParseError, "JSON: expected ',' or '}', got #{str[poff[0], 4].inspect} near #{str[[poff[0] - 8, 0].max, 20].inspect}"
 				end
 			end
 			out
@@ -95,7 +95,7 @@ module JSON
 					poff[0] += 1
 					break
 				else
-					raise ParseError, "JSON: expected ',' or ']', got #{str[poff[0], 4].inspect}"
+					raise ParseError, "JSON: expected ',' or ']', got #{str[poff[0], 4].inspect} near #{str[[poff[0] - 8, 0].max, 20].inspect}"
 				end
 			end
 			out
@@ -139,7 +139,7 @@ module JSON
 					loop do
 						case c = str[poff[0]]
 						when ?0..?9
-						when ?-
+						when ?-, ?+
 							break if exp.length > 0
 						else
 							break
