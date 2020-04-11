@@ -6,8 +6,12 @@ module JSON
 	# ruby object -> json string
 	def self.generate(obj)
 		case obj
+		when {}
+			'{}'
 		when ::Hash
 			'{ ' + obj.map { |k, v| generate(k) + ': ' + generate(v) }.join(', ') + ' }'
+		when []
+			'[]'
 		when ::Array
 			'[ ' + obj.map { |v| generate(v) }.join(', ') + ' ]'
 		when ::Integer, ::Float
@@ -31,6 +35,36 @@ module JSON
 			'null'
 		else
 			raise "JSON: cannot serialize #{obj.inspect}"
+		end
+	end
+
+	# pretty print
+	def self.generate_pp(obj, indent='  ', maxlen=80, curindent='')
+		case obj
+		when ::Hash
+			if obj.empty?
+				curindent + generate(obj)
+			elsif curindent.length + 4 + 6*obj.length > maxlen or curindent.length + generate(obj).length > maxlen
+				curindent + '{' + "\r\n" + obj.map { |k, v|
+					generate_pp(k, indent, maxlen, curindent + indent) +
+					': ' +
+					generate_pp(v, indent, maxlen, curindent + indent).sub(/^\s*/, '')
+				}.join(",\r\n") + "\r\n" + curindent + '}'
+			else
+				curindent + generate(obj)
+			end
+		when ::Array
+			if obj.empty?
+				curindent + generate(obj)
+			elsif curindent.length + 4 + 3*obj.length > maxlen or curindent.length + generate(obj).length > maxlen
+				curindent + '[' + "\r\n" + obj.map { |k|
+					generate_pp(k, indent, maxlen, curindent + indent)
+				}.join(",\r\n") + "\r\n" + curindent + ']'
+			else
+				curindent + generate(obj)
+			end
+		else
+			curindent + generate(obj)
 		end
 	end
 
@@ -209,4 +243,7 @@ private
 	end
 end
 
-class ::Object ; def to_json ; ::JSON.generate(self) ; end ; end
+class ::Object
+	def to_json ; ::JSON.generate(self) ; end
+	def to_json_pp(*a) ; ::JSON.generate_pp(self, *a) ; end
+end
